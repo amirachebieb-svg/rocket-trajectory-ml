@@ -188,6 +188,6 @@ I designed the project, ran the experiments, checked the results, and made the f
 
 ## Author
 
-Amira Chebied
+Amira Chebieb
 
 GitHub: [@amirachebied-svg](https://github.com/amirachebied-svg)

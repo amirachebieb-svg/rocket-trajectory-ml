@@ -1,33 +1,52 @@
 # Rocket Trajectory Simulation & Machine Learning
 
+[![Python](https://img.shields.io/badge/Python-3.x-blue.svg)](https://www.python.org/)
+[![Scikit-learn](https://img.shields.io/badge/scikit--learn-ML-orange.svg)](https://scikit-learn.org/)
+[![XGBoost](https://img.shields.io/badge/XGBoost-Ensemble-green.svg)](https://xgboost.readthedocs.io/)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/amirachebied-svg/rocket-trajectory-ml/blob/main/rocket-trajectory-ml.ipynb)
+
 ## Overview
 
-This project explores whether machine learning can predict the maximum altitude of a rocket using data generated from a physics-based simulation.
+I built a simplified rocket-flight simulator and used it to generate data for a machine-learning experiment.
 
-I developed a simplified vertical rocket-flight simulation and used it to generate a dataset of different rocket configurations. I then trained machine-learning models to predict maximum altitude from the simulated data.
+The main idea was to see how well machine-learning models could predict a rocket's maximum altitude from its design parameters.
 
-The project combines basic rocket physics, numerical simulation, data generation, and machine learning.
+I compared Linear Regression, Random Forest, and XGBoost, and also tested whether adding physics-based features could improve the predictions.
 
-## Why I Built This
+The project combines rocket physics, numerical simulation, feature engineering, machine learning, model evaluation, and error analysis.
 
-I was interested in understanding the relationship between rocket design parameters and flight performance.
+## Main Results
 
-Instead of relying on an existing dataset, I generated the data through a simulation. This allowed me to experiment with different rocket parameters and study how they affect maximum altitude.
+| Metric | Result |
+|--------|--------|
+| Best Model | Random Forest + Physics Features |
+| Best R² (5-fold CV) | 0.9749 |
+| XGBoost R² | 0.9526 |
+| XGBoost MAE | 544 m |
+| Physics validation error | 0.285% |
 
-## Physics-Based Simulator
+## Why I Built It
 
-The simulator models simplified vertical rocket flight and includes:
+I wanted to understand how rocket parameters affect flight performance and whether machine learning could learn part of this relationship.
+
+Instead of starting with an existing dataset, I generated the data myself using the physics simulator. This gave me control over the rocket parameters and allowed me to test different configurations.
+
+## Physics Simulation
+
+The simulator models a simplified vertical rocket flight.
+
+It includes:
 
 - Gravity
-- Altitude-dependent air density
+- Changing atmospheric density with altitude
 - Thrust
 - Aerodynamic drag
 - Fuel consumption
 - Changing rocket mass during the burn
 
-The simulator calculates the maximum altitude reached by each simulated rocket.
+For each rocket configuration, the simulator calculates the maximum altitude reached.
 
-I also compared the simulator with an analytical no-drag rocket-equation solution. The results were close, with a difference of about 0.285%.
+I also compared the simulator with an analytical no-drag solution. The difference was about 0.285%, which gave me a basic check that the simulation was producing reasonable results.
 
 ## Dataset
 
@@ -40,75 +59,110 @@ I generated 1,000 different rocket configurations by varying:
 - Drag coefficient
 - Reference area
 
-The target variable is the maximum altitude obtained from the simulation.
+The target variable is the maximum altitude produced by the simulation.
+
+## Feature Engineering
+
+I also created several physics-based features from the original parameters:
+
+- Total impulse = Thrust × Burn Time
+- Thrust-to-weight ratio (TWR)
+- Mass ratio
+- Effective drag area (CdA)
+
+The goal was to give the models information that has a direct physical meaning.
 
 ## Machine Learning
 
-I compared Linear Regression and Random Forest models.
-
-I also created physics-derived features such as:
-
-- Total impulse
-- Thrust-to-weight ratio
-- Mass ratio
-- Drag area
-
-These features were intended to represent meaningful relationships between the physical parameters.
-
-## Results
-
-Using 5-fold cross-validation:
+I compared three models using 5-fold cross-validation.
 
 | Model | Raw Features | + Physics Features |
-|---|---:|---:|
+|-------|--------------|--------------------|
 | Linear Regression | 0.9015 | 0.9302 |
 | Random Forest | 0.9451 | 0.9749 |
+| XGBoost | — | 0.9526 |
 
-The Random Forest model achieved the strongest cross-validation result, with a mean R² of 0.9749 when the physics-derived features were included.
+The biggest improvement came from Random Forest after adding the physics-based features.
 
-On 200 held-out rocket configurations, the model achieved a mean absolute percentage error (MAPE) of approximately 6.3%.
+The best result was:
+
+**Random Forest + Physics Features → R² = 0.9749**
+
+XGBoost also performed well:
+
+- R² = 0.9526
+- MAE = 544 m
+
+## Error Analysis
+
+I looked at the prediction errors at different altitude ranges.
+
+| Altitude Range | Mean Absolute Error |
+|----------------|---------------------|
+| Low (<10 km) | 305 m |
+| Mid (10–20 km) | 801 m |
+| High (>20 km) | 3,324 m |
+
+The model was more accurate at lower altitudes and less accurate at higher altitudes.
+
+One possible reason is that there are fewer high-altitude examples in the generated dataset.
+
+## V-2 Case Study
+
+I also tried the simulator with approximate historical parameters for the German V-2 rocket.
+
+| Parameter | Value |
+|-----------|-------|
+| Simulated maximum altitude | 101,109 m |
+| Historical maximum altitude | 206,000 m |
+| Relative error | 50.9% |
+
+The difference is large, but this was expected.
+
+My simulator assumes a simplified vertical flight, while the real V-2 followed a ballistic trajectory and was affected by physical factors that are not included in the current model.
+
+This showed me one of the main limitations of the simulation and also gave me ideas for improving it later.
 
 ## Verification and Debugging
 
-An important part of the project was checking whether the simulation results were reasonable.
+One of the problems I found during testing was that some rockets were still climbing when the simulation stopped.
 
-During verification, I found that some simulated flights were being stopped too early after fuel burnout. 232 out of 1,000 rockets were still climbing when the simulation stopped.
+In the first version, 232 out of 1,000 rockets were affected.
 
-I extended the post-burn simulation time and recomputed the results. After this correction, none of the 1,000 flights were truncated.
+I extended the simulation after fuel burnout so that the rockets had enough time to reach their actual maximum altitude.
 
-This reinforced the importance of validating generated data rather than assuming that simulation results are automatically correct.
+After this correction, none of the 1,000 simulations were stopped while the rocket was still climbing.
+
+This was an important part of the project because the machine-learning results depend directly on the quality of the simulated data.
 
 ## Limitations
 
-This is a simplified educational simulation rather than a high-fidelity rocket-flight model.
+This is a simplified educational simulation, not a high-fidelity rocket simulator.
 
-Current limitations include:
+Some limitations are:
 
-- Vertical flight only
-- Simplified atmosphere
-- Constant gravity
-- Constant thrust during the burn
-- Synthetic data generated by the simulator
-- No real flight data
+- Only vertical flight is simulated
+- Launch angle is not included
+- Gravity is treated as constant
+- The drag coefficient does not change with Mach number
+- Wind is not modeled
+- Coriolis effects are not included
+- No multi-stage rockets
+- The dataset is generated by simulation rather than real flight measurements
 
-Therefore, the machine-learning model should be considered a demonstration of the approach rather than a replacement for a high-fidelity rocket simulator.
-
-## AI Assistance
-
-AI tools were used as a supporting resource during the development of this project, mainly for occasional guidance, debugging suggestions, and exploring implementation ideas.
-
-The project structure, experiments, parameter choices, verification process, and final decisions were reviewed and adapted during development.
+Because of these limitations, the ML models should not be treated as replacements for professional rocket-flight simulations.
 
 ## Future Work
 
-Possible improvements include:
+Some improvements I would like to explore are:
 
-- Adding a more realistic atmospheric model
-- Modeling changing thrust
-- Extending the simulation to non-vertical trajectories
-- Adding real or experimental flight data
-- Comparing additional machine-learning models
-- Studying which physical parameters have the greatest influence on maximum altitude
+- 2D or 3D trajectories
+- Launch-angle optimization
+- More realistic atmospheric and drag models
+- Real rocket-flight data
+- Physics-Informed Neural Networks (PINNs)
+- Reinforcement learning for trajectory optimization
+- More machine-learning models and ensemble methods
 
 ## Tools
 
@@ -117,8 +171,23 @@ Possible improvements include:
 - Pandas
 - Matplotlib
 - Scikit-learn
+- XGBoost
 - Google Colab
 
 ## Project Structure
 
-`rocket-trajectory-ml.ipynb` contains the simulation, data generation, machine-learning experiments, evaluation, and visualizations.
+`rocket-trajectory-ml.ipynb`
+
+The notebook contains the simulation, dataset generation, feature engineering, machine-learning experiments, evaluation, error analysis, V-2 case study, and debugging.
+
+## AI Assistance
+
+I used AI tools as a supporting resource during the project, mainly for occasional debugging help, implementation ideas, and understanding some coding problems.
+
+I designed the project, ran the experiments, checked the results, and made the final decisions about the methods and analysis.
+
+## Author
+
+Amira Chebied
+
+GitHub: [@amirachebied-svg](https://github.com/amirachebied-svg)

@@ -186,6 +186,20 @@ I used AI tools as a supporting resource during the project, mainly for occasion
 
 I designed the project, ran the experiments, checked the results, and made the final decisions about the methods and analysis.
 
+## Project Report
+
+A complete written report is available in this repository:
+
+[**Rocket_AI_Project_Report.pdf**](./Rocket_AI_Project_Report.pdf)
+
+The report includes:
+
+- Executive summary
+- Detailed methodology
+- Results and model comparison
+- Error analysis by altitude regime
+- V-2 case study
+- Limitations and future work
 ## Author
 
 Amira Chebieb
